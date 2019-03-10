@@ -3,26 +3,38 @@ import React, { Component } from 'react'
 class App extends Component {
   state = {
     value: 0,
-    autoIncrement: false,
+    autoUpdateDelta: 0,
+    autoUpdateSpeed: 500,
   }
 
   handleIncrease = () => this.setState({ value: this.state.value + 1 })
   handleDecrease = () => this.setState({ value: this.state.value - 1 })
   handleReset = () => this.setState({ value: 0 })
 
-  handleToggleAutoIncrement = () => {
-    const nextValue = !this.state.autoIncrement
+  handleAutoUpdateChange = event => {
+    if (event.target.name !== 'autoUpdateDelta') return
 
-    if (nextValue) {
-      this.autoIncrementInterval = setInterval(this.handleIncrease, 500)
-    } else {
-      clearInterval(this.autoIncrementInterval)
+    const delta = +event.target.value
+
+    this.setState({ autoUpdateDelta: delta })
+
+    if (this.autoUpdateInterval) {
+      clearInterval(this.autoUpdateInterval)
     }
-    this.setState({ autoIncrement: !this.state.autoIncrement })
+
+    if (delta !== 0) {
+      this.autoUpdateInterval = setInterval(
+        () => this.setState({ value: this.state.value + delta }),
+        this.state.autoUpdateSpeed,
+      )
+    }
   }
 
+  handleSpeedChange = event =>
+    this.setState({ autoUpdateSpeed: event.target.value })
+
   render() {
-    const { value, autoIncrement } = this.state
+    const { value } = this.state
 
     return (
       <div>
@@ -40,14 +52,20 @@ class App extends Component {
         <button onClick={this.handleIncrease}>Increase</button>
         <button onClick={this.handleDecrease}>Decrease</button>
         <button onClick={this.handleReset}>Reset</button>
-        <div>
+        <form onChange={this.handleAutoUpdateChange}>
+          <div>Auto update</div>
+          speed:{' '}
           <input
-            type="checkbox"
-            checked={autoIncrement}
-            onChange={this.handleToggleAutoIncrement}
+            name="autoUpdateSpeed"
+            type="number"
+            value={this.state.autoUpdateSpeed}
+            onChange={this.handleSpeedChange}
+            disabled={this.state.autoUpdateDelta !== 0}
           />
-          Auto increment
-        </div>
+          <input type="radio" name="autoUpdateDelta" value={1} /> Increase
+          <input type="radio" name="autoUpdateDelta" value={-1} /> Decrease
+          <input type="radio" name="autoUpdateDelta" value={0} /> Stop
+        </form>
       </div>
     )
   }
